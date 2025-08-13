@@ -189,16 +189,70 @@ api-demo-django/
 │   ├── wsgi.py               # WSGI configuration
 │   └── asgi.py               # ASGI configuration
 ├── users/                    # Django app for user operations
-│   ├── models.py             # User data models
-│   ├── views.py              # API views/controllers
-│   ├── serializers.py        # Data serialization and validation
+│   ├── __init__.py           # Python package marker
+│   ├── admin.py              # Django admin configuration
+│   ├── apps.py               # App configuration
+│   ├── migrations/           # Database migration files
+│   │   └── __init__.py
+│   ├── models.py             # User data models (currently empty - uses in-memory store)
+│   ├── serializers.py        # DRF serializers for validation and data transformation
+│   ├── store.py              # In-memory data store with CRUD operations
+│   ├── tests.py              # Unit tests for the user app
 │   ├── urls.py               # App-specific URL patterns
-│   └── tests.py              # Unit tests
+│   └── views.py              # API views using Django REST Framework
 ├── manage.py                 # Django management script
 ├── requirements.txt          # Python dependencies
 ├── Dockerfile               # Docker configuration
 └── docker-compose.yml       # Docker Compose setup
 ```
+
+## 📱 Users App Implementation
+
+The `users/` directory contains a complete Django app that implements user management functionality:
+
+### Key Components
+
+**📄 `store.py`**: In-memory data store
+
+- Contains all CRUD operations for user management
+- Pre-seeded with 10 sample users for testing
+- Uses Python dictionaries to simulate database records
+- Implements UUID-based user identification
+- Provides functions: `list_users()`, `get_user()`, `create_user()`, `update_user()`, `delete_user()`
+
+**🔍 `serializers.py`**: Data validation and transformation
+
+- `UserCreateSerializer`: Validates required fields for new users (firstName, email)
+- `UserUpdateSerializer`: Validates optional fields for user updates
+- Uses Django REST Framework serializers for automatic validation
+- Handles email validation and field length constraints
+
+**🎯 `views.py`**: API endpoints implementation
+
+- `UsersListView`: GET `/users` - Returns all users
+- `UserCreateView`: POST `/user` - Creates a new user
+- `UserDetailView`: GET/PATCH/DELETE `/user/<id>` - User-specific operations
+- Uses Django REST Framework's APIView for clean request/response handling
+- Implements proper HTTP status codes (200, 201, 404, 204)
+
+**🛣️ `urls.py`**: URL routing configuration
+
+- Maps HTTP endpoints to view classes
+- Supports UUID-based user identification in URLs
+- Clean RESTful URL patterns
+
+**🧪 `tests.py`**: Unit testing (ready for expansion)
+
+- Set up for Django's testing framework
+- Ready for comprehensive test implementation
+
+### Data Flow
+
+1. **Request** → Django URL dispatcher (`urls.py`)
+2. **Routing** → Appropriate view class (`views.py`)
+3. **Validation** → DRF serializers (`serializers.py`)
+4. **Processing** → In-memory store operations (`store.py`)
+5. **Response** → JSON data with proper HTTP status codes
 
 ## 🧪 Running Tests
 
@@ -248,18 +302,27 @@ docker-compose logs         # View container logs
 ## ✨ Features Demonstrated
 
 - **RESTful API Design**: Proper HTTP methods and status codes
-- **Input Validation**: Joi schemas for request validation
-- **Error Handling**: Centralized error handling middleware
-- **Type Safety**: Full TypeScript implementation
-- **Testing**: Comprehensive unit tests with high coverage
-- **Code Quality**: ESLint and Prettier for consistent code style
+- **Input Validation**: Django REST Framework serializers for request validation
+- **Error Handling**: DRF exception handling with proper HTTP status codes
+- **Type Safety**: Python type hints throughout the codebase
+- **Testing**: Django testing framework with comprehensive unit tests
+- **Code Quality**: Clean Python code following Django best practices
 - **Containerization**: Docker setup for consistent deployment
-- **Logging**: Request logging middleware
-- **Separation of Concerns**: Clean architecture with controllers, models, and routes
+- **In-Memory Storage**: Custom store module for demonstration purposes
+- **Separation of Concerns**: Clean Django architecture with views, serializers, and data layer
 
 ## 💾 Data Storage
 
-This demo uses **in-memory storage** for simplicity. The application comes pre-loaded with 10 sample users. Data will persist during the application session but will reset when the server restarts.
+This demo uses **in-memory storage** implemented in `users/store.py` for simplicity. Key features:
+
+- **No Database Required**: Uses Python lists and dictionaries to store data
+- **Pre-seeded Data**: Automatically loads 10 sample users on first access
+- **Session Persistence**: Data persists during the application session
+- **Reset on Restart**: All data resets when the server restarts
+- **UUID Identification**: Each user has a unique UUID identifier
+- **Realistic Data**: Sample users include realistic names, emails, and phone numbers
+
+The store module provides a clean interface that could easily be replaced with a database backend in a production environment.
 
 ## 🔄 Sample Data
 
@@ -268,10 +331,11 @@ The API comes with 10 pre-loaded users for testing. You can immediately test GET
 ## 📝 Notes for Reviewers
 
 - **No Database**: Uses in-memory storage for demo simplicity
-- **Environment**: Configured for development with detailed logging
-- **Validation**: All inputs are validated using Joi schemas
-- **Error Handling**: Proper HTTP status codes and error responses
-- **Testing**: High test coverage with realistic test scenarios
-- **Code Style**: Follows TypeScript and Express.js best practices
+- **Environment**: Configured for development with Django's debug mode
+- **Validation**: All inputs are validated using Django REST Framework serializers
+- **Error Handling**: Proper HTTP status codes and error responses using DRF
+- **Testing**: Django testing framework with realistic test scenarios
+- **Code Style**: Follows Python and Django best practices
+- **Architecture**: Uses Django's app-based architecture with clear separation of concerns
 
 ---

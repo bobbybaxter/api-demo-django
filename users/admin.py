@@ -1,3 +1,9 @@
-from django.contrib import admin
+"""Admin configuration for the users app.
 
-# Register your models here.
+Registers the User model with the admin site for management.
+"""
+
+from django.contrib import admin
+from .models import User
+
+admin.site.register(User)

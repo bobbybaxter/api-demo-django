@@ -70,22 +70,39 @@ This project is part of a multi-language series demonstrating equivalent server 
 
 ### Option 2: Docker (Recommended for Testing)
 
-1. **Clone and navigate to the project**
+1. **Prerequisites**
+
+   - Docker Desktop installed and running
+   - Docker Compose (included with Docker Desktop)
+
+2. **Clone and navigate to the project**
 
    ```bash
    git clone <repository-url>
    cd api-demo-django
    ```
 
-2. **Start with Docker Compose**
+3. **Start with Docker Compose**
 
    ```bash
    docker-compose up --build
    ```
 
-3. **Server is now running at** `http://localhost:8000`
+4. **Access the application**
 
-4. **Stop the container when done**
+   - **API Server**: `http://localhost:8000`
+   - **Users API**: `http://localhost:8000/users`
+   - **Admin Interface**: `http://localhost:8000/admin/` (admin/admin)
+
+5. **What happens automatically**
+
+   - ✅ Container builds with Python 3.11 and dependencies
+   - ✅ Database migrations run automatically
+   - ✅ User store seeded with 10 sample users
+   - ✅ Admin superuser created (username: `admin`, password: `admin`)
+   - ✅ Development server starts with hot reloading
+
+6. **Stop the container when done**
    ```bash
    docker-compose down
    ```
@@ -207,8 +224,12 @@ api-demo-django/
 ├── requirements.txt          # Python dependencies
 ├── pyproject.toml            # pytest configuration and project metadata
 ├── conftest.py               # pytest fixtures and test configuration
-├── Dockerfile               # Docker configuration
-└── docker-compose.yml       # Docker Compose setup
+├── Dockerfile               # Docker image definition
+├── docker-compose.yml       # Development Docker setup
+├── docker-compose.prod.yml  # Production Docker setup
+├── entrypoint.sh            # Container initialization script
+├── .dockerignore            # Docker build context exclusions
+└── DOCKER_README.md         # Detailed Docker documentation
 ```
 
 ## 📱 Users App Implementation
@@ -314,13 +335,101 @@ pylint users/                     # Check code quality
 
 ## 🐳 Docker Commands
 
+### Basic Commands
+
 ```bash
-docker-compose build        # Build Docker image
-docker-compose up           # Start container
-docker-compose up --build   # Build and start container
-docker-compose down         # Stop container
-docker-compose logs         # View container logs
+docker-compose up --build   # Build and start container (recommended)
+docker-compose up           # Start container (if already built)
+docker-compose up -d        # Start container in detached mode
+docker-compose down         # Stop and remove container
+docker-compose logs web     # View container logs
+docker-compose ps           # Show running containers
 ```
+
+### Development Commands
+
+```bash
+# Run Django management commands in container
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py createsuperuser
+docker-compose exec web python manage.py shell
+docker-compose exec web python manage.py test
+
+# Access container shell
+docker-compose exec web bash
+
+# User store operations
+docker-compose exec web python manage.py shell -c "
+from users.store import reset_and_seed
+reset_and_seed()
+print('User store reset and reseeded')
+"
+```
+
+### Production Commands
+
+```bash
+# Use production configuration
+docker-compose -f docker-compose.prod.yml up --build
+
+# Build without cache
+docker-compose build --no-cache
+```
+
+### Troubleshooting
+
+```bash
+# Clean restart
+docker-compose down
+docker-compose build --no-cache
+docker-compose up
+
+# Check if Docker daemon is running
+docker info
+
+# Start Docker Desktop (macOS)
+open -a Docker
+```
+
+## 🐳 Docker Architecture
+
+This project includes a complete Docker setup optimized for both development and production:
+
+### Container Features
+
+- **Base Image**: Python 3.11 slim for smaller image size
+- **Non-root User**: Security-focused container with dedicated app user
+- **Hot Reloading**: Volume mounting for live code changes in development
+- **Auto-initialization**: Automatic database setup and user store seeding
+- **Health Checks**: Built-in Django development server monitoring
+
+### Development vs Production
+
+- **Development** (`docker-compose.yml`): Volume mounting, debug mode, hot reloading
+- **Production** (`docker-compose.prod.yml`): Gunicorn WSGI server, optimized settings
+
+### Automatic Setup
+
+The `entrypoint.sh` script automatically handles:
+
+1. 🔄 Database migrations for Django admin functionality
+2. 🌱 User store seeding with 10 sample users
+3. 👤 Admin superuser creation (admin/admin)
+4. 🚀 Application startup
+
+### File Structure
+
+```
+Docker Configuration/
+├── Dockerfile               # Multi-stage build optimized for Python
+├── docker-compose.yml       # Development with volume mounting
+├── docker-compose.prod.yml  # Production with Gunicorn
+├── entrypoint.sh           # Initialization and setup script
+├── .dockerignore           # Build context optimization
+└── DOCKER_README.md        # Comprehensive Docker documentation
+```
+
+For detailed Docker documentation, see `DOCKER_README.md`.
 
 ## ✨ Features Demonstrated
 
@@ -331,7 +440,7 @@ docker-compose logs         # View container logs
 - **Modern Testing**: pytest with Django integration, fixtures, and test markers
 - **Code Quality**: 10/10 pylint rating across all modules with comprehensive docstrings
 - **Test Coverage**: Unit tests for serializers and integration tests for API endpoints
-- **Containerization**: Docker setup for consistent deployment
+- **Containerization**: Complete Docker setup with development and production configurations
 - **In-Memory Storage**: Custom store module for demonstration purposes
 - **Separation of Concerns**: Clean Django architecture with views, serializers, and data layer
 - **Documentation**: Comprehensive docstrings following Python standards
